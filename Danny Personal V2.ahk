@@ -1,12 +1,21 @@
+; =============================
+; AHK Script for Personal Use
+; ============================
+; SETTINGS
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 CoordMode 'Mouse', 'Window'
+SetNumLockState 'On'
 SetNumLockState 'AlwaysOn'
 SetScrollLockState 'Off'
+SetScrollLockState 'AlwaysOff'
 SetTitleMatchMode '2' ; Set title match mode to 2 for partial matches
 SetTitleMatchMode 'Slow' ; Slow mode for partial matches
 Persistent ; Keep the script running
 KeyHistory 500 ; Show the last 500 key presses in the Key History window
+
+; =============================
+; LIBRARIES
 ; SetWorkingDir 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\AutoHotkey\Lib'
 #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\TapHoldManager.ahk'
 #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\InterceptionTapHold.ahk'
@@ -20,8 +29,10 @@ KeyHistory 500 ; Show the last 500 key presses in the Key History window
 ; HOTKEYS
 Insert::{  ; Save and Reload the script
     if InStr( WinGetTitle('A'), 'Visual Studio Code') {
-        Send '^s'   ; Save the file
-        ShowTip('AHK Saved & Reloaded') ; Show the tooltip for 1 seconds
+        ; Send '^s'   ; Save the file
+        ; ShowTip('AHK Saved & Reloaded') ; Show the tooltip for 1 seconds
+        Send '^+!{F1}' ; Git Sync
+        ShowTip('AHK Synced & Reloaded') ; Show the tooltip for 1 seconds
     } else {
         ShowTip('AHK Reloaded') ; Show the tooltip for 1.5 seconds
     }
