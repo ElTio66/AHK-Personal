@@ -1,8 +1,10 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Force
 CoordMode 'Mouse', 'Window'
+SetNumLockState 'On'
 SetNumLockState 'AlwaysOn'
 SetScrollLockState 'Off'
+SetScrollLockState 'AlwaysOff'
 SetTitleMatchMode '2' ; Set title match mode to 2 for partial matches
 SetTitleMatchMode 'Slow' ; Slow mode for partial matches
 Persistent ; Keep the script running
