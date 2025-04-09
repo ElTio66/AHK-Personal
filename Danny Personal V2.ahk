@@ -19,6 +19,7 @@ KeyHistory 500 ; Show the last 500 key presses in the Key History window
 ; SetWorkingDir 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\AutoHotkey\Lib'
 #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\TapHoldManager.ahk'
 #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\InterceptionTapHold.ahk'
+global thm := TapHoldManager() ; Create an instance of the TapHoldManager class
 ; #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\AutoHotInterception.ahk'
 
 ; ============================
@@ -27,12 +28,11 @@ KeyHistory 500 ; Show the last 500 key presses in the Key History window
 
 ; ============================
 ; HOTKEYS
-Insert::{  ; Save and Reload the script
+Insert:: {  ; Save and Reload the script}
     if InStr( WinGetTitle('A'), 'Visual Studio Code') {
-        ; Send '^s'   ; Save the file
-        ; ShowTip('AHK Saved & Reloaded') ; Show the tooltip for 1 seconds
-        Send '^+!{F1}' ; Git Sync
-        ShowTip('AHK Synced & Reloaded') ; Show the tooltip for 1 seconds
+        Send '^s' ; Save the file
+        Sleep 20 ; Wait for 20 milliseconds
+        ShowTip('AHK Saved & Reloaded') ; Show the tooltip for 1 seconds
     } else {
         ShowTip('AHK Reloaded') ; Show the tooltip for 1.5 seconds
     }
@@ -40,7 +40,6 @@ Insert::{  ; Save and Reload the script
     return  
 }
 ~Esc::{  ; Reload/ Suspend / Exit the script
-    thm := TapHoldManager() ; Create an instance of the TapHoldManager class
     thm.Add("Esc", ReloadSuspendQuitFunc) ; Add a tap hold event for key 'Esc'
     ReloadSuspendQuitFunc(isHold, taps, state) { ; Function to handle the tap hold event
         if (taps == 1) { ; If the key is tapped twice
@@ -146,7 +145,6 @@ MoveMouse() {   ; Function to move the mouse for the jiggler
 ; ---------
 ; Layer 4:
 ~RWin:: {
-    thm := TapHoldManager() ; Create an instance of the TapHoldManager class
     thm.Add("RWin", L4state) ; Add a tap hold event for key 'Rwin'
     global Layer4 := false ; Initialize the Layer4 variable
     L4state(isHold, taps, state) { ; Function to handle the tap hold event
