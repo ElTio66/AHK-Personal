@@ -16,22 +16,26 @@ KeyHistory 500 ; Show the last 500 key presses in the Key History window
 
 ; =============================
 ; LIBRARIES
-; SetWorkingDir 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\AutoHotkey\Lib'
 #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\TapHoldManager.ahk'
 #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\InterceptionTapHold.ahk'
-global thm := TapHoldManager() ; Create an instance of the TapHoldManager class
 ; #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\AutoHotInterception.ahk'
+
+; ============================
+; GLOBAL VARIABLES
+global thm := TapHoldManager() ; Create an instance of the TapHoldManager class
+global Layer4 := false ; Initialize the Layer4 variable
+global g_DoubleAlt := false ; Initialize the g_DoubleAlt variable
 
 ; ============================
 ; HOTSTRINGS
 :*:@@::danielriolo86@gmail.com
+:*:asd::autohotkey V2 
 
 ; ============================
 ; HOTKEYS
-Insert:: {  ; Save and Reload the script}
+Insert::{  ; Save and Reload the script
     if InStr( WinGetTitle('A'), 'Visual Studio Code') {
-        Send '^s' ; Save the file
-        Sleep 20 ; Wait for 20 milliseconds
+        SendSleep '^s' ; Save the file
         ShowTip('AHK Saved & Reloaded') ; Show the tooltip for 1 seconds
     } else {
         ShowTip('AHK Reloaded') ; Show the tooltip for 1.5 seconds
@@ -39,7 +43,7 @@ Insert:: {  ; Save and Reload the script}
     Reload
     return  
 }
-~Esc::{  ; Reload/ Suspend / Exit the script
+~Esc::{  ; Reload/ Suspend / Exit the script, Send Esc key
     thm.Add("Esc", ReloadSuspendQuitFunc) ; Add a tap hold event for key 'Esc'
     ReloadSuspendQuitFunc(isHold, taps, state) { ; Function to handle the tap hold event
         if (taps == 1) { ; If the key is tapped twice
@@ -54,34 +58,65 @@ Insert:: {  ; Save and Reload the script}
         }
     }
 }
-F13::{  ; Toggles the "Always On Top" state for the active window
+F13::{  ; (Circle button) Toggles the "Always On Top" state for the active window
     ActiveWindowID := WinGetID('A')
     WinSetAlwaysOnTop -1, ActiveWindowID ; Toggles the "Always On Top" state for the active window
     return
 }
+!LButton::{ ; (Alt + Left Click), Drag and Move the window
+    global g_DoubleAlt  ; Declare it since this hotkey function must modify it.
+    ; if g_DoubleAlt{
+    ;     MouseGetPos ,, &KDE_id
+    ;     ; This message is mostly equivalent to WinMinimize,
+    ;     ; but it avoids a bug with PSPad.
+    ;     PostMessage 0x0112, 0xf020,,, KDE_id
+    ;     g_DoubleAlt := false
+    ;     return
+    ; }
+    ; Get the initial mouse position and window id, and
+    ; abort if the window is maximized.
+    MouseGetPos &KDE_X1, &KDE_Y1, &KDE_id
+    if WinGetMinMax(KDE_id)
+        return
+    ; Get the initial window position.
+    WinGetPos &KDE_WinX1, &KDE_WinY1,,, KDE_id
+    Loop
+    {
+        if !GetKeyState("LButton", "P") ; Break if button has been released.
+            break
+        MouseGetPos &KDE_X2, &KDE_Y2 ; Get the current mouse position.
+        KDE_X2 -= KDE_X1 ; Obtain an offset from the initial mouse position.
+        KDE_Y2 -= KDE_Y1
+        KDE_WinX2 := (KDE_WinX1 + KDE_X2) ; Apply this offset to the window position.
+        KDE_WinY2 := (KDE_WinY1 + KDE_Y2)
+        WinMove KDE_WinX2, KDE_WinY2,,, KDE_id ; Move the window to the new position.
+    }
+}
+
 ; ============================
 ; APP SPECIFIC HOTKEYS
 ; ---------
 ; Visual Studio Code
 HotIfWinActive(InStr('Visual Studio Code', WinGetTitle('A')))
+; SC02A::Send '{{}' ; (button)
 F15::Send '^s' ; Save the file in Visual Studio Code
 HotIfWinActive() ; End conditional hotkey block
-; ============================
-; MACROS
-F16::{  ; Mouse Jiggler
-    global isJiggling := isJiggling ? false : true ; Toggle the jiggling state
-    if (isJiggling) {
-        SetTimer MoveMouse, 1000 ; Move the mouse every second
-        ShowTip('Mouse Jiggler is ' . (isJiggling ? 'ON' : 'OFF')) ; Show the tooltip for 1 second
-    } else {
-        SetTimer MoveMouse, 0 ; Stop the mouse movement
-        ShowTip('Mouse Jiggler is ' . (isJiggling ? 'ON' : 'OFF')) ; Show the tooltip for 1 second
-    }
-    return
+
+; ---------
+; Microsoft Excel
+HotIfWinActive(InStr('Microsoft Excel', WinGetTitle('A')))
+; Paste Values
+; ^v::Send '^!v'  ; Paste values in Excel (ctrl + alt + v)
+^v::{  ; Paste Values in Excel (Alt + h + v + v)
+    SendSleep '!h' ; Open the Paste Special menu
+    SendSleep '!v' ; Select Paste Values
+    SendSleep '!v' ; Confirm the selection
 }
+HotIfWinActive() ; End conditional hotkey block
+
 ; ============================
 ; FUNCTIONS
-ClipCopy(piMode := false) { ; Function to copy or cut the selected text to the clipboard
+CopyCut(piMode := false) { ; Function to copy or cut the selected text to the clipboard
     ; Parameters:
     ;   piMode (optional): 
     ;       - false (default): Copies the selected text to the clipboard without removing it.
@@ -98,30 +133,15 @@ ClipCopy(piMode := false) { ; Function to copy or cut the selected text to the c
     Clipboard := clpBackup ; Restore the original clipboard content
     return sRet ; Return the copied or cut data
 }
-ClipPaste(data) {   ; Function to paste data from the clipboard
-    ; Parameters:
-    ;     data - The data to be pasted. This will temporarily replace the current clipboard content.
-
-    ; Functionality:
-    ; 1. Backs up the current clipboard content using ClipboardAll().
-    ; 2. Sets the clipboard to the provided data.
-    ; 3. Sends the default paste command (Ctrl+V).
-    ; 4. Waits until the clipboard is no longer in use by checking the open clipboard window.
-    ;    - If the clipboard remains open for more than 20 attempts (2 seconds), the function exits.
-    ; 5. Restores the original clipboard content after the paste operation.
-
-    ; Note:
-    ; - This function ensures that the original clipboard content is preserved after the operation.
-    ; - The loop ensures that the clipboard is not in use before restoring the original content.
-
+pasTe(data) { ; Function to paste the given data into the clipboard and send the paste command
     clipbackup := ClipboardAll() ; Backup clipboard
     A_Clipboard := data ; Set new data to clipboard
     Send('^v') ; Send the default paste command
     Loop ; Check repeatedly to see if the clipboard is still open
-           if (A_Index > 20) ; If more than 20 tries, Exit function
-               Exit 
-           else Sleep(100) ; Otherwise, wait another 100ms
-    Until !DllCall('GetOpenClipboardWindow', 'Ptr') ; Wait until the clipboard is closed
+           if (A_Index > 20) ; If more than 20 tries, notify of failure
+            return TrayTip(A_ThisFunc ' failed to restore clipboard contents.')
+        else Sleep(100) ; Otherwise, wait another 100ms
+    Until !DllCall('GetOpenClipboardWindow', 'Ptr')
     A_Clipboard := clipbackup ; Finally, restore original clipboard contents
 }
 ShowTip(data, time := 1000) { ; Function to show a tooltip with the given data for a specified time
@@ -129,21 +149,14 @@ ShowTip(data, time := 1000) { ; Function to show a tooltip with the given data f
     Sleep time ; Wait for the specified time (default is 1000 ms)
     ToolTip ; Clear the tooltip
 }
-MoveMouse() {   ; Function to move the mouse for the jiggler
-    global isJiggling := isJiggling ? false : true ; Toggle the jiggling state
-    If(A_TimeIdle > 60000) { ; Check if the mouse has been idle for more than 60 seconds
-        ; MouseMove 0, 1, 0, 'R' ; Move the mouse down by 1 pixel
-        ; MouseMove 0, -1, 0, 'R' ; Move the mouse back up by 1 pixel
-        xOffset := Random(-10, 10) ; Randomly move left or right by 10 pixels
-        yOffset := Random(-10, 10) ; Randomly move up or down by 10 pixels
-        MouseMove xOffset, yOffset, 0, 'R' ; Move the mouse by the random offsets
-    }
-    return
+SendSleep(data, time := 20) { ; Function to send a key with a sleep time
+    Send data ; Send the specified key
+    Sleep time ; Wait for the specified time (default is 100 ms)
 }
 ; ============================
 ; Extra keyboard layers
 ; ---------
-; Layer 4:
+; Layer 4: Double tap RWin
 ~RWin:: {
     thm.Add("RWin", L4state) ; Add a tap hold event for key 'Rwin'
     global Layer4 := false ; Initialize the Layer4 variable
@@ -159,8 +172,30 @@ MoveMouse() {   ; Function to move the mouse for the jiggler
 }
 #HotIf Layer4 ; Define hotkeys that are active only when Layer4 is true
 Media_Play_Pause::Send '{F8}'
-#HotIf ; End conditional hotkey block
+#HotIf ; End conditional hotkey block 
 
 ; ============================
-; CHANGE HIGHLIGHTED TEXT TO ALL CAPS WITH CAPSLOCK
-
+; Mouse Jiggler
+global isJiggling := false ; Initialize the isJiggling variable
+F16::{  ; (X button) Mouse Jiggler
+    global isJiggling := isJiggling ? false : true ; Toggle the jiggling state
+    if (isJiggling) {
+        SetTimer MoveMouse, 1000 ; Move the mouse every second
+        ShowTip('Mouse Jiggler is ' . (isJiggling ? 'ON' : 'OFF')) ; Show the tooltip for 1 second
+    } else {
+        SetTimer MoveMouse, 0 ; Stop the mouse movement
+        ShowTip('Mouse Jiggler is ' . (isJiggling ? 'ON' : 'OFF')) ; Show the tooltip for 1 second
+    } 
+    MoveMouse() {   ; Function to move the mouse for the jiggler
+        global isJiggling := isJiggling ? false : true ; Toggle the jiggling state
+        If(A_TimeIdle > 15000) { ; Check if the mouse has been idle for more than 60 seconds
+            ; Move the mouse up and down by 1 pixel
+            ; MouseMove 0, .5, 0, 'R' ; Move the mouse down by 1 pixel
+            ; MouseMove 0, -.5, 0, 'R' ; Move the mouse back up by 1 pixel
+            ; Randomly move the mouse by a small amount to simulate jiggling
+            xOffset := Random(-10, 10) ; Randomly move horizontally +/- (1-10) pixels
+            yOffset := Random(-10, 10) ; Randomly move vertically +/- (1-10) pixels
+            MouseMove xOffset, yOffset, 0, 'R' ; Move the mouse by the random offsets
+        }
+    }
+}
