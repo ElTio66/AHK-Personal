@@ -64,40 +64,6 @@ F13::{  ; (Circle button) Toggles the "Always On Top" state for the active windo
     WinSetAlwaysOnTop -1, ActiveWindowID ; Toggles the "Always On Top" state for the active window
     return
 }
-Media_Next::{ ; Hold to fast forward You
-    savedWindowID := WinGetID('A') ; Get the ID of the active window
-    YouTubeWin := WinExist('YouTube') ; Check if the YouTube window exists
-    thm.add('Media_Next', MediaNextHandler) ; Add a tap hold event for key 'Media_Next'
-    MediaNextHandler(isHold, taps, state) { ; Function to handle the tap hold event
-        savedWindowID := WinGetID('A') ; Get the ID of the active window
-        YouTubeWin := WinExist('YouTube') ; Check if the YouTube window exists
-        if YouTubeWin {
-            WinActivate YouTubeWin ; Activate the YouTube window
-            WinWaitActive YouTubeWin ; Wait for the YouTube window to be active
-            if (isHold) {
-                Send '{Right}' ; Send Right key, fast forward the video
-            }
-        }
-        WinActivate savedWindowID ; Activate the original window
-        WinWaitActive savedWindowID ; Wait for the original window to be active
-    }
-}
-Media_Prev::{ ; Hold to rewind YouTube video
-    savedWindowID := WinGetID('A') ; Get the ID of the active window
-    YouTubeWin := WinExist('YouTube') ; Check if the YouTube window exists
-    thm.add('Media_Prev', MediaPrevHandler) ; Add a tap hold event for key 'Media_Prev'
-    MediaPrevHandler(isHold, taps, state) { ; Function to handle the tap hold event
-        if YouTubeWin {
-            WinActivate YouTubeWin ; Activate the YouTube window
-            WinWaitActive YouTubeWin ; Wait for the YouTube window to be active
-            if (taps >=2) {
-
-            }
-        }
-    }
-    WinActivate savedWindowID ; Activate the original window
-    WinWaitActive savedWindowID ; Wait for the original window to be active
-}
 !LButton::{ ; (Alt + Left Click), Drag and Move the window
     global g_DoubleAlt  ; Declare it since this hotkey function must modify it.
     ; if g_DoubleAlt{
