@@ -18,6 +18,7 @@ KeyHistory 500 ; Show the last 500 key presses in the Key History window
 ; LIBRARIES
 #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\TapHoldManager.ahk'
 #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\InterceptionTapHold.ahk'
+#Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\AHK-Personal\Lib\DannysLib.ahk' ; Include the custom library for personal functions
 ; #Include 'C:\Users\Daniel.Riolo\OneDrive - MM Enterprises USA LLC\Documents\GitHub\TapHoldManager\AHK v2\Lib\AutoHotInterception.ahk'
 
 ; ============================
@@ -63,6 +64,40 @@ F13::{  ; (Circle button) Toggles the "Always On Top" state for the active windo
     WinSetAlwaysOnTop -1, ActiveWindowID ; Toggles the "Always On Top" state for the active window
     return
 }
+Media_Next::{ ; Hold to fast forward You
+    savedWindowID := WinGetID('A') ; Get the ID of the active window
+    YouTubeWin := WinExist('YouTube') ; Check if the YouTube window exists
+    thm.add('Media_Next', MediaNextHandler) ; Add a tap hold event for key 'Media_Next'
+    MediaNextHandler(isHold, taps, state) { ; Function to handle the tap hold event
+        savedWindowID := WinGetID('A') ; Get the ID of the active window
+        YouTubeWin := WinExist('YouTube') ; Check if the YouTube window exists
+        if YouTubeWin {
+            WinActivate YouTubeWin ; Activate the YouTube window
+            WinWaitActive YouTubeWin ; Wait for the YouTube window to be active
+            if (isHold) {
+                Send '{Right}' ; Send Right key, fast forward the video
+            }
+        }
+        WinActivate savedWindowID ; Activate the original window
+        WinWaitActive savedWindowID ; Wait for the original window to be active
+    }
+}
+Media_Prev::{ ; Hold to rewind YouTube video
+    savedWindowID := WinGetID('A') ; Get the ID of the active window
+    YouTubeWin := WinExist('YouTube') ; Check if the YouTube window exists
+    thm.add('Media_Prev', MediaPrevHandler) ; Add a tap hold event for key 'Media_Prev'
+    MediaPrevHandler(isHold, taps, state) { ; Function to handle the tap hold event
+        if YouTubeWin {
+            WinActivate YouTubeWin ; Activate the YouTube window
+            WinWaitActive YouTubeWin ; Wait for the YouTube window to be active
+            if (taps >=2) {
+
+            }
+        }
+    }
+    WinActivate savedWindowID ; Activate the original window
+    WinWaitActive savedWindowID ; Wait for the original window to be active
+}
 !LButton::{ ; (Alt + Left Click), Drag and Move the window
     global g_DoubleAlt  ; Declare it since this hotkey function must modify it.
     ; if g_DoubleAlt{
@@ -92,67 +127,36 @@ F13::{  ; (Circle button) Toggles the "Always On Top" state for the active windo
         WinMove KDE_WinX2, KDE_WinY2,,, KDE_id ; Move the window to the new position.
     }
 }
-
+NumLock::{ ;Launch the calculator
+    Run 'calc.exe' ; Launch the calculator
+}
 ; ============================
 ; APP SPECIFIC HOTKEYS
 ; ---------
-; Visual Studio Code
-HotIfWinActive(InStr('Visual Studio Code', WinGetTitle('A')))
-; SC02A::Send '{{}' ; (button)
-F15::Send '^s' ; Save the file in Visual Studio Code
-HotIfWinActive() ; End conditional hotkey block
+; Microsoft Excel
+#HotIf WinActive('Microsoft Excel')
+    ; Paste Values
+    ; ^v::Send '^!v'  ; Paste values in Excel (ctrl + alt + v)
+    ^v::{  ; Paste Values in Excel (Alt + h + v + v)
+        SendSleep '!h' ; Open the Paste Special menu
+        SendSleep '!v' ; Select Paste Values
+        SendSleep '!v' ; Confirm the selection
+    }
+#HotIf ; End Excel hotkey block
 
 ; ---------
-; Microsoft Excel
-HotIfWinActive(InStr('Microsoft Excel', WinGetTitle('A')))
-; Paste Values
-; ^v::Send '^!v'  ; Paste values in Excel (ctrl + alt + v)
-^v::{  ; Paste Values in Excel (Alt + h + v + v)
-    SendSleep '!h' ; Open the Paste Special menu
-    SendSleep '!v' ; Select Paste Values
-    SendSleep '!v' ; Confirm the selection
-}
-HotIfWinActive() ; End conditional hotkey block
+; Notepad
+#HotIf WinActive('Notepad') ; Define hotkeys that are active only when Notepad is the active window
+    F15:: Send 'Danny is the bomb!' ; (Square button) Send a message to Notepad
+    F16:: Send 'Danny is the best!' ; (X button) Send a message to Notepad
+#HotIf ; End Notepad hotkey block
 
-; ============================
-; FUNCTIONS
-CopyCut(piMode := false) { ; Function to copy or cut the selected text to the clipboard
-    ; Parameters:
-    ;   piMode (optional): 
-    ;       - false (default): Copies the selected text to the clipboard without removing it.
-    ;       - true: Cuts the selected text to the clipboard.
-    ; Returns:
-    ;   The text that was copied or cut.
-    clpBackup := ClipboardAll() ; Backup the current clipboard content
-    Clipboard := '' ; Clear the clipboard
+; ---------
+; Visual Studio Code
+#HotIf WinActive('Visual Studio Code')
 
-    sCopyKey := piMode ? 'x' : 'c' ; Determine the key to send based on piMode
-    Send '^' . sCopyKey ; Send Ctrl+X or Ctrl+C to cut or copy the selected text
-    ClipWait 1 ; Wait for the clipboard to contain data
-    sRet := ClipboardAll() ; Store the copied or cut data in a variable
-    Clipboard := clpBackup ; Restore the original clipboard content
-    return sRet ; Return the copied or cut data
-}
-pasTe(data) { ; Function to paste the given data into the clipboard and send the paste command
-    clipbackup := ClipboardAll() ; Backup clipboard
-    A_Clipboard := data ; Set new data to clipboard
-    Send('^v') ; Send the default paste command
-    Loop ; Check repeatedly to see if the clipboard is still open
-           if (A_Index > 20) ; If more than 20 tries, notify of failure
-            return TrayTip(A_ThisFunc ' failed to restore clipboard contents.')
-        else Sleep(100) ; Otherwise, wait another 100ms
-    Until !DllCall('GetOpenClipboardWindow', 'Ptr')
-    A_Clipboard := clipbackup ; Finally, restore original clipboard contents
-}
-ShowTip(data, time := 1000) { ; Function to show a tooltip with the given data for a specified time
-    ToolTip data ; Show the tooltip with the provided data
-    Sleep time ; Wait for the specified time (default is 1000 ms)
-    ToolTip ; Clear the tooltip
-}
-SendSleep(data, time := 20) { ; Function to send a key with a sleep time
-    Send data ; Send the specified key
-    Sleep time ; Wait for the specified time (default is 100 ms)
-}
+#HotIf ; End Visual Studio Code hotkey block
+
 ; ============================
 ; Extra keyboard layers
 ; ---------
@@ -171,7 +175,7 @@ SendSleep(data, time := 20) { ; Function to send a key with a sleep time
     }
 }
 #HotIf Layer4 ; Define hotkeys that are active only when Layer4 is true
-Media_Play_Pause::Send '{F8}'
+    Media_Play_Pause::Send '{F8}'
 #HotIf ; End conditional hotkey block 
 
 ; ============================
