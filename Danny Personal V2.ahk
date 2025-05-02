@@ -145,7 +145,7 @@ NumLock::{ ;Launch the calculator
 #HotIf ; End conditional hotkey block 
 
 ; ============================
-; Mouse Jiggler
+; MOUSE JIGGLER 
 global isJiggling := false ; Initialize the isJiggling variable
 F16::{  ; (X button) Mouse Jiggler
     global isJiggling := isJiggling ? false : true ; Toggle the jiggling state
@@ -156,16 +156,30 @@ F16::{  ; (X button) Mouse Jiggler
         SetTimer MoveMouse, 0 ; Stop the mouse movement
         ShowTip('Mouse Jiggler is ' . (isJiggling ? 'ON' : 'OFF')) ; Show the tooltip for 1 second
     } 
-    MoveMouse() {   ; Function to move the mouse for the jiggler
-        global isJiggling := isJiggling ? false : true ; Toggle the jiggling state
-        If(A_TimeIdle > 15000) { ; Check if the mouse has been idle for more than 60 seconds
-            ; Move the mouse up and down by 1 pixel
-            ; MouseMove 0, .5, 0, 'R' ; Move the mouse down by 1 pixel
-            ; MouseMove 0, -.5, 0, 'R' ; Move the mouse back up by 1 pixel
-            ; Randomly move the mouse by a small amount to simulate jiggling
-            xOffset := Random(-10, 10) ; Randomly move horizontally +/- (1-10) pixels
-            yOffset := Random(-10, 10) ; Randomly move vertically +/- (1-10) pixels
-            MouseMove xOffset, yOffset, 0, 'R' ; Move the mouse by the random offsets
-        }
-    }
 }
+; Mouse Jiggler V2
+; global isJiggling := false ; Initialize the isJiggling variable
+; F16::{  ; (X button) Mouse Jiggler
+;     global isJiggling := isJiggling ? false : true ; Toggle the jiggling state
+;     thm.Add("F16", JigglJuggle) ; Add a tap hold event for key 'F16'
+;     JigglJuggle(isHold, taps, state) {
+;         if (taps == 1) {
+;             isJiggling := !isJiggling ; Toggle the jiggling state
+;             if (isJiggling) {
+;                 ShowTip('Mouse Jiggler is ON') ; Show the tooltip for 1 second
+;                 SetTimer MoveMouse(1), 1000 ; Move the mouse every second
+;             } else {
+;                 ShowTip('Mouse Jiggler is OFF') ; Show the tooltip for 1 second
+;             }
+;         }
+;         if (taps == 2) { ; If the key is tapped twice
+;             isJiggling := !isJiggling ; Toggle the jiggling state
+;             if (isJiggling) {
+;                 ShowTip('Mouse Jiggler is ON') ; Show the tooltip for 1 second
+;                 SetTimer MoveMouse(2), 1000 ; Move the mouse every second
+;             } else {
+;                 ShowTip('Mouse Jiggler is OFF') ; Show the tooltip for 1 second
+;             }
+;         }
+;     }
+; }

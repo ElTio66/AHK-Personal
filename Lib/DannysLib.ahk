@@ -6,7 +6,7 @@ ShowTip(data, time := 1000) { ; Function to show a tooltip with the given data f
 }
 SendSleep(data, time := 20) { ; Function to send a key with a sleep time
     Send data ; Send the specified key
-    Sleep time ; Wait for the specified time (default is 100 ms)
+    Sleep time ; Wait for the specified time (default is 20 ms)
 }
 CopyCut(piMode := false) { ; Function to copy or cut the selected text to the clipboard
     ; Parameters:
@@ -35,4 +35,33 @@ pasTe(data) { ; Function to paste the given data into the clipboard and send the
         else Sleep(100) ; Otherwise, wait another 100ms
     Until !DllCall('GetOpenClipboardWindow', 'Ptr')
     A_Clipboard := clipbackup ; Finally, restore original clipboard contents
+}
+MoveMouse() {   ; Function to move the mouse for the jiggler
+    global isJiggling := isJiggling ? false : true ; Toggle the jiggling state
+    If(A_TimeIdle > 15000) { ; Check if the mouse has been idle for more than 60 seconds
+        ; Move the mouse up and down by 1 pixel
+        ; MouseMove 0, .5, 0, 'R' ; Move the mouse down by 1 pixel
+        ; MouseMove 0, -.5, 0, 'R' ; Move the mouse back up by 1 pixel
+
+        ; Randomly move the mouse by a small amount to simulate jiggling
+        xOffset := Random(-10, 10) ; Randomly move horizontally +/- (1-10) pixels
+        yOffset := Random(-10, 10) ; Randomly move vertically +/- (1-10) pixels
+        MouseMove xOffset, yOffset, 0, 'R' ; Move the mouse by the random offsets
+    }
+}
+MoveMouse2(mode) {   ; Function to move the mouse for the jiggler
+    global isJiggling := isJiggling ? false : true ; Toggle the jiggling state
+    If(A_TimeIdle > 15000) { ; Check if the mouse has been idle for more than 60 seconds
+        if mode == 1 {
+            ; Move the mouse up and down by 1 pixel
+            MouseMove 0, .5, 0, 'R' ; Move the mouse down by 1 pixel
+            MouseMove 0, -.5, 0, 'R' ; Move the mouse back up by 1 pixel
+        }
+        if mode == 2 {
+            ; Randomly move the mouse by a small amount to simulate jiggling
+            xOffset := Random(-10, 10) ; Randomly move horizontally +/- (1-10) pixels
+            yOffset := Random(-10, 10) ; Randomly move vertically +/- (1-10) pixels
+            MouseMove xOffset, yOffset, 0, 'R' ; Move the mouse by the random offsets
+        }
+    }
 }
